@@ -3,6 +3,5 @@ HEIGHT=15
 ENTRY=0,0
 EXIT=19,14
 OUTPUT_FILE=maze.txt
-PERFECT=False
-seed=12093
-#ignore comment lines
+PERFECT=True
+# Ignore comment lines
