@@ -1,10 +1,10 @@
 import random
 from typing import List, Tuple, Iterator
 
-N: int = 1  # 0001
-E: int = 2  # 0010
-S: int = 4  # 0100
-W: int = 8  # 1000
+N: int = 0b0001  # 0001
+E: int = 0b0010  # 0010
+S: int = 0b0100  # 0100
+W: int = 0b1000  # 1000
 
 DIRECTION = {
     N: (0, -1),
