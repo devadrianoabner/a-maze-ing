@@ -1,5 +1,10 @@
 from enum import IntFlag
-from typing import Tuple, List
+from typing import List, NamedTuple, Tuple
+
+
+class Point(NamedTuple):
+    x: int
+    y: int
 
 
 class Wall(IntFlag):
@@ -7,7 +12,6 @@ class Wall(IntFlag):
     E = 2  # 0010 East
     S = 4  # 0100 South
     W = 8  # 1000 West
-    ALL = 15  # 1111, all walls standing
 
     @property
     def opposite(self) -> "Wall":
@@ -17,16 +21,16 @@ class Wall(IntFlag):
         return Wall(self >> 2)
 
     @property
-    def delta(self) -> Tuple[int, int]:
-        """Step (delta_x, delta_y) to the neighbour on this side"""
+    def delta(self) -> Point:
+        """Step to the neighbour on this side"""
         if self == Wall.N:
-            return (0, -1)
+            return Point(0, -1)
         if self == Wall.E:
-            return (1, 0)
+            return Point(1, 0)
         if self == Wall.S:
-            return (0, 1)
+            return Point(0, 1)
         if self == Wall.W:
-            return (-1, 0)
+            return Point(-1, 0)
         raise ValueError(f"{self!r} is not a single direction")
 
 
@@ -41,10 +45,36 @@ class Grid:
         for _ in range(self.height):
             row = []
             for _ in range(self.width):
-                row.append(self.ALL)  # 15 = f in hexadecimal
+                row.append(15)  # 15 or f in hexadecimal
             cells.append(row)
         return cells
 
-    def is_inside(self, x: int, y: int) -> bool:
-        """True if (x, y) is a coordinate that exists in the grid"""
-        return 0 <= x < self.width and 0 <= y < self.height
+    def is_inside(self, position: Point) -> bool:
+        """True if the position exists in the grid"""
+        if position.x < 0 or position.x >= self.width:
+            return False
+        if position.y < 0 or position.y >= self.height:
+            return False
+        return True
+
+    def get_cell(self, position: Point) -> int:
+        """Value of the cell at (x, y)"""
+        return self._cells[position.y][position.x]
+
+    def break_wall(self, position: Point, wall: Wall) -> None:
+        """Open the wall on the given side, in both neighbouring cells"""
+        step = wall.delta
+        neighbour = Point(position.x + step.x, position.y + step.y)
+
+        self._cells[position.y][position.x] &= ~wall
+        self._cells[neighbour.y][neighbour.x] &= ~wall.opposite
+
+    def get_valid_neighbors(self, position: Point) -> List[Tuple[Wall, Point]]:
+        """Sides of the position that have a neighbour inside the grid"""
+        neighbors = []
+        for wall in Wall:
+            step = wall.delta
+            neighbour = Point(position.x + step.x, position.y + step.y)
+            if self.is_inside(neighbour):
+                neighbors.append((wall, neighbour))
+        return neighbors
