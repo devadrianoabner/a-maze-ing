@@ -1,90 +1,89 @@
-import random
-from typing import List, Tuple, Iterator
-
-N: int = 0b0001  # 0001
-E: int = 0b0010  # 0010
-S: int = 0b0100  # 0100
-W: int = 0b1000  # 1000
-
-DIRECTION = {
-    N: (0, -1),
-    E: (1, 0),
-    S: (0, 1),
-    W: (-1, 0)
-}
+from enum import IntFlag
+from typing import List, NamedTuple, Tuple
 
 
-class Board:
-    def __init__(self, width, height, start, end, seed: int = None):
+class Point(NamedTuple):
+    x: int
+    y: int
+
+
+class Wall(IntFlag):
+    N = 1  # 0001 North
+    E = 2  # 0010 East
+    S = 4  # 0100 South
+    W = 8  # 1000 West
+
+    @property
+    def opposite(self) -> "Wall":
+        """Wall on the other side of the same boundary"""
+        if self in (Wall.N, Wall.E):
+            return Wall(self << 2)
+        return Wall(self >> 2)
+
+    @property
+    def delta(self) -> Point:
+        """Step to the neighbour on this side"""
+        if self == Wall.N:
+            return Point(0, -1)
+        if self == Wall.E:
+            return Point(1, 0)
+        if self == Wall.S:
+            return Point(0, 1)
+        if self == Wall.W:
+            return Point(-1, 0)
+        raise ValueError(f"{self!r} is not a single direction")
+
+
+class Grid:
+    def __init__(self, width: int, height: int) -> None:
         self.width = width
         self.height = height
-        self.start = start
-        self.end = end
-        self.seed = seed
-        self.board = [[15 for _ in range(width)] for _ in range(height)]
-        self.visited = [[False for _ in range(width)] for _ in range(height)]
-        self.possible: List[Tuple[int, int]] = []
+        self._cells = self._build_cells()
 
-    def _get_oposite_wall(self, wall: int) -> int:
-        """Calculates the opposite wall based on the wall. ROFL"""
-        if wall <= 2:
-            return wall << 2
-        else:
-            return wall >> 2
+    def _build_cells(self) -> List[List[int]]:
+        cells = []
+        for _ in range(self.height):
+            row = []
+            for _ in range(self.width):
+                row.append(15)  # 15 or f in hexadecimal
+            cells.append(row)
+        return cells
 
-    def _break_wall(self, x, y, wall):
-        """Breaks a wall from x to an neighbour x."""
-        self.board[y][x] &= ~wall
+    def is_inside(self, position: Point) -> bool:
+        """True if the position exists in the grid"""
+        if position.x < 0 or position.x >= self.width:
+            return False
+        if position.y < 0 or position.y >= self.height:
+            return False
+        return True
 
-        opposite = self._get_oposite_wall(wall)
+    def get_cell(self, position: Point) -> int:
+        """Value of the cell at (x, y)"""
+        return self._cells[position.y][position.x]
 
-        dx, dy = DIRECTION[wall]
-        nx, ny = x + dx, y + dy
+    def break_wall(self, position: Point, wall: Wall) -> None:
+        """Open the wall on the given side, in both neighbouring cells"""
+        step = wall.delta
+        neighbour = Point(position.x + step.x, position.y + step.y)
 
-        self.board[ny][nx] &= ~opposite
+        self._cells[position.y][position.x] &= ~wall
+        self._cells[neighbour.y][neighbour.x] &= ~wall.opposite
 
-    def _get_valid_neighbors(self, x, y) -> Iterator[Tuple[int, int, int]]:
-        """Test the important neighbours."""
-        for wall, (dx, dy) in DIRECTION.items():
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < self.width and 0 <= ny < self.height:
-                yield wall, nx, ny
+    def get_valid_neighbors(self, position: Point) -> List[Tuple[Wall, Point]]:
+        """Sides of the position that have a neighbour inside the grid"""
+        neighbors = []
+        for wall in Wall:
+            step = wall.delta
+            neighbour = Point(position.x + step.x, position.y + step.y)
+            if self.is_inside(neighbour):
+                neighbors.append((wall, neighbour))
+        return neighbors
 
-    def generate(self) -> None:
-        """Generate a maze."""
-        if self.seed is not None:
-            random.seed(self.seed)
-
-        sx, sy = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
-        self.visited[sy][sx] = True
-
-        for wall, nx, ny in self._get_valid_neighbors(sx, sy):
-            self.possible.append((nx, ny))
-
-        while self.possible:
-            idx = random.randint(0, len(self.possible) - 1)
-            px, py = self.possible.pop(idx)
-            
-            if self.visited[py][px]:
-                continue
-
-            maze_neighbors = []
-            for wall, nx, ny in self._get_valid_neighbors(px, py):
-                if self.visited[ny][nx]:
-                    maze_neighbors.append(wall)
-
-            if maze_neighbors:
-                wall_to_break = random.choice(maze_neighbors)
-                self._break_wall(px, py, wall_to_break)
-
-            self.visited[py][px] = True
-
-            for wall, nx, ny in self._get_valid_neighbors(px, py):
-                if not self.visited[ny][nx]:
-                    self.possible.append((nx, ny))
-
-    def print_maze_hex(self) -> None:
-        """Print the maze in the hex specification."""
-        for row in self.board:
-            hex_row = "".join([hex(cell)[2:] for cell in row])
-            print(hex_row)
+    def get_open_neighbors(self, position: Point) -> List[Tuple[Wall, Point]]:
+        """Neighbours reachable from the position without crossing a wall."""
+        cell = self.get_cell(position)
+        reachable = []
+        for wall, neighbour in self.get_valid_neighbors(position):
+            if not cell & wall:
+                reachable.append((wall, neighbour))
+        return reachable

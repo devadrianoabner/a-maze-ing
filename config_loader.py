@@ -1,3 +1,5 @@
+
+
 class InputError(Exception):
     """Raised when the user input is wrong."""
     def __init__(self, *args):
