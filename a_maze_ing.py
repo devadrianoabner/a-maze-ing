@@ -2,12 +2,12 @@ from sys import argv
 from config_loader import ConfigLoader, InputError
 
 
-def main():
-    if len(argv) < 2:
-        print("Error: there must be at least one argument")
+def main() -> None:
+    if len(argv) != 2:
+        print("Usage: python3 a_maze_ing.py config.txt")
         return
     try:
-        config = ConfigLoader("config.txt").load()
+        config = ConfigLoader(argv[1]).load()
     except InputError as error:
         print("Error:", error)
         return

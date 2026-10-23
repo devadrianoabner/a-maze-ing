@@ -1,16 +1,15 @@
+from typing import Any, Dict
 
 
 class InputError(Exception):
     """Raised when the user input is wrong."""
-    def __init__(self, *args):
-        super().__init__(*args)
 
 
 class ConfigLoader:
-    def __init__(self, config_file: str):
+    def __init__(self, config_file: str) -> None:
         self.config_file = config_file
 
-    def _value_cast(self, value: str) -> any:
+    def _value_cast(self, value: str) -> Any:
         """Cast the input to a supported value."""
         if value.isdigit():
             return int(value)
@@ -26,14 +25,14 @@ class ConfigLoader:
         else:
             return value.strip("'\"")
 
-    def load(self) -> dict:
+    def load(self) -> Dict[str, Any]:
         """Load the configuration file into a config dict."""
         config = {}
         try:
             with open(self.config_file, "r") as file:
                 lines = file.read().splitlines()
-        except FileNotFoundError:
-            raise InputError(f"file {self.config_file} not found.")
+        except OSError as error:
+            raise InputError(f"cannot read {self.config_file}: {error}")
 
         for line in lines:
             line = line.strip()
