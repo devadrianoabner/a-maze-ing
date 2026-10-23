@@ -78,3 +78,12 @@ class Grid:
             if self.is_inside(neighbour):
                 neighbors.append((wall, neighbour))
         return neighbors
+
+    def get_open_neighbors(self, position: Point) -> List[Tuple[Wall, Point]]:
+        """Neighbours reachable from the position without crossing a wall."""
+        cell = self.get_cell(position)
+        reachable = []
+        for wall, neighbour in self.get_valid_neighbors(position):
+            if not cell & wall:
+                reachable.append((wall, neighbour))
+        return reachable
