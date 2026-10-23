@@ -13,6 +13,11 @@ class MazeGenerator:
         self._blocked: Set[Point] = blocked or set()
         self._visited: Set[Point] = set(self._blocked)
 
+    @property
+    def rng(self) -> random.Random:
+        """Random generator shared with the imperfect step."""
+        return self._rng
+
     def generate(self) -> None:
         """Carve a perfect maze into the grid."""
         start = self._pick_start()

@@ -87,3 +87,15 @@ class Grid:
             if not cell & wall:
                 reachable.append((wall, neighbour))
         return reachable
+
+    def count_openings(self, position: Point) -> int:
+        """How many sides of the cell are open."""
+        return len(self.get_open_neighbors(position))
+
+    def build_wall(self, position: Point, wall: Wall) -> None:
+        """Close the wall on the given side, in both neighbouring cells."""
+        step = wall.delta
+        neighbour = Point(position.x + step.x, position.y + step.y)
+
+        self._cells[position.y][position.x] |= wall
+        self._cells[neighbour.y][neighbour.x] |= wall.opposite
