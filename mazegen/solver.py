@@ -36,7 +36,7 @@ def _to_letters(path: List[Point]) -> str:
     for current, following in zip(path, path[1:]):
         step = Point(following.x - current.x, following.y - current.y)
         for wall in Wall:
-            if wall.delta == step:
+            if wall.delta == step and wall.name:
                 letters += wall.name
     return letters
 
