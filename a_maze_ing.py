@@ -1,5 +1,6 @@
 from sys import argv
 from typing import Any, Dict
+from mazegen.imperfect import remove_dead_ends
 
 from config_loader import ConfigLoader, InputError, validate
 from mazegen.board import Grid, Point
@@ -22,6 +23,9 @@ def run(config: Dict[str, Any]) -> None:
 
     generator = MazeGenerator(grid, config.get("seed"), blocked)
     generator.generate()
+
+    if not config["perfect"]:
+        remove_dead_ends(grid, blocked, generator.rng)
 
     path = solve(grid, entry, exit_)
     text = build_output(grid, entry, exit_, path)
