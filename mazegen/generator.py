@@ -42,10 +42,10 @@ class MazeGenerator:
         return candidates
 
     def _pick_start(self) -> Point:
-        """Random cell where the growth begins."""
+        """Random free cell where the growth begins."""
         while True:
             x = self._rng.randint(0, self.grid.width - 1)
             y = self._rng.randint(0, self.grid.height - 1)
             start = Point(x, y)
             if start not in self._blocked:
-                return Point(x, y)
+                return start
