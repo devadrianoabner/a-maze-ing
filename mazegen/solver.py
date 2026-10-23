@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Deque, Dict, Optional, List
+from typing import Deque, Dict, Optional, List, Set, Tuple
 from .board import Grid, Point, Wall
 
 
@@ -46,3 +46,28 @@ def solve(grid: Grid, entry: Point, exit_: Point) -> str:
     came_from = _explore(grid, entry)
     path = _trace_back(came_from, exit_)
     return _to_letters(path)
+
+
+def nearest_free(grid: Grid, start: Point, blocked: Set[Point]) -> Point:
+    """Closest cell to start that is not blocked."""
+    seen: Set[Point] = {start}
+    queue: Deque[Point] = deque([start])
+
+    while queue:
+        current = queue.popleft()
+        if current not in blocked:
+            return current
+        for _, neighbour in grid.get_valid_neighbors(current):
+            if neighbour not in seen:
+                seen.add(neighbour)
+                queue.append(neighbour)
+    raise ValueError("The grid has no free cell")
+
+
+def place_endpoints(
+    grid: Grid, entry: Point, exit_: Point, blocked: Set[Point]
+) -> Tuple[Point, Point]:
+    """Move entry and exit off blocked cells, keeping them different."""
+    new_entry = nearest_free(grid, entry, blocked)
+    new_exit = nearest_free(grid, exit_, blocked | {new_entry})
+    return new_entry, new_exit
