@@ -1,6 +1,6 @@
 """Interactive terminal menu for the maze."""
 import random
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from .board import Grid, Point
 from .display import WALL_COLORS, render
@@ -14,17 +14,16 @@ from .writer import build_output, write_output
 class Menu:
     """Show the maze and let the user change how it is displayed."""
     def __init__(self, config: Dict[str, Any]) -> None:
-        seed = config.get("seed")
-        if seed is None:
-            seed = random.randrange(2**32)
-        self.seed: int = seed
         """Generate the first maze from the config.
 
         Args:
             config: The validated configuration dictionary.
         """
+        seed: Optional[int] = config.get("seed")
+        if seed is None:
+            seed = random.randrange(2**32)
+        self.seed: int = seed
         self.config = config
-        self.seed = config.get("seed")
         self.show_path = False
         self.color_index = 0
         self.grid = Grid(config["width"], config["height"])

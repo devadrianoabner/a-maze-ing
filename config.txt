@@ -4,5 +4,5 @@ ENTRY=0,0
 EXIT=19,14
 OUTPUT_FILE=maze.txt
 PERFECT=True
-SEED=1598825468
+SEED=42
 # Ignore comment lines
